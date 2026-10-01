@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://signspeak.example/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://signspeak.example/tools</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://signspeak.example/tools/detection</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://signspeak.example/gestures</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://signspeak.example/tools/how-it-works</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://signspeak.example/blog</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://signspeak.example/about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://signspeak.example/contact</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://signspeak.example/#detector</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://signspeak.example/#dictionary</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://signspeak.example/#studio</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://signspeak.example/#trainer</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://signspeak.example/#about</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>
