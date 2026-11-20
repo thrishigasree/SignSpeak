@@ -2,54 +2,54 @@
 @import "tw-animate-css";
 
 /* ==========================================================================
-   SignSpeak ISL — Aesthetic, Calm, and Professional Design System
-   Palette: Serene Midnight Slate, Ethereal Sage Teal, Lavender Mist & Soft Pearl
-   Typography: Outfit (Headings) & Plus Jakarta Sans (Body)
+  SignSpeak ISL — calm, accessible design system
+  Palette: soft sage, mist blue, warm white
+  Typography: DM Sans
    ========================================================================== */
 
 :root {
-  /* Calming Midnight & Slate Backgrounds */
-  --bg-deep: #080c14;
-  --bg-surface: #0e1524;
-  --bg-card: #131c30;
-  --bg-card-hover: #18233c;
-  --bg-elevated: #1c2a47;
+  /* Soft neutral surfaces */
+  --bg-deep: #f5f7f3;
+  --bg-surface: #ffffff;
+  --bg-card: #edf3ee;
+  --bg-card-hover: #e5eee7;
+  --bg-elevated: #dce9df;
 
-  /* Calming Aesthetic Accents */
-  --teal-glow: #2dd4bf;
-  --teal-primary: #14b8a6;
-  --teal-soft: rgba(45, 212, 191, 0.12);
-  --teal-border: rgba(45, 212, 191, 0.25);
+  /* Sage accents */
+  --teal-glow: #548b74;
+  --teal-primary: #477961;
+  --teal-soft: #e5f0e8;
+  --teal-border: #c6dbcb;
 
-  --lavender: #a78bfa;
-  --lavender-soft: rgba(167, 139, 250, 0.12);
-  --rose-soft: rgba(244, 114, 182, 0.14);
-  --rose: #f472b6;
+  --lavender: #8ea9bc;
+  --lavender-soft: #eaf0f5;
+  --rose-soft: #f8e9e5;
+  --rose: #bd7772;
 
   /* Text & Fog Hierarchy */
-  --text-pure: #f8fafc;
-  --text-soft: #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-pure: #20342c;
+  --text-soft: #34483f;
+  --text-muted: #66776f;
+  --text-dim: #85918b;
 
   /* Lines & Glass Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-glass: rgba(255, 255, 255, 0.12);
-  --border-highlight: rgba(45, 212, 191, 0.35);
+  --border-subtle: #e2e9e3;
+  --border-glass: #dce5dd;
+  --border-highlight: #a9c9b1;
 
   /* Radius & Shadows */
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
+  --radius-sm: 8px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
   --radius-pill: 999px;
 
-  --shadow-calm: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
-  --shadow-card: 0 10px 30px -4px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 0 25px -4px rgba(45, 212, 191, 0.25);
+  --shadow-calm: 0 4px 18px -4px rgba(38, 66, 49, 0.12);
+  --shadow-card: 0 8px 24px -8px rgba(38, 66, 49, 0.16);
+  --shadow-glow: 0 0 20px -6px rgba(71, 121, 97, 0.2);
 
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
-  font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   color: var(--text-soft);
   background: var(--bg-deep);
   font-synthesis: none;
@@ -63,7 +63,7 @@ body {
   min-width: 320px;
   background: var(--bg-deep);
   color: var(--text-soft);
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 button, input, select { font: inherit; }
@@ -79,9 +79,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   overflow: hidden;
   background: var(--bg-deep);
   background-image:
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(45, 212, 191, 0.08), transparent 70%),
-    radial-gradient(ellipse 70% 50% at 95% 15%, rgba(167, 139, 250, 0.06), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 5% 45%, rgba(45, 212, 191, 0.05), transparent 60%);
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(84, 139, 116, 0.1), transparent 70%),
+    radial-gradient(ellipse 70% 50% at 95% 15%, rgba(142, 169, 188, 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 5% 45%, rgba(84, 139, 116, 0.06), transparent 60%);
 }
 
 .section-shell {
@@ -125,7 +125,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   margin-inline: auto;
   height: 76px;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(8, 12, 20, 0.75);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(20px) saturate(1.4);
   -webkit-backdrop-filter: blur(20px) saturate(1.4);
 }
@@ -134,10 +134,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  font-family: "Outfit", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 19px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 .brand-mark {
   display: grid;
@@ -259,24 +259,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
-  min-height: 740px;
-  padding-top: 130px;
-  padding-bottom: 90px;
-  gap: 60px;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: auto;
+  padding-top: 72px;
+  padding-bottom: 48px;
+  gap: 0;
 }
 .hero::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 52%;
-  width: 1px;
-  background: linear-gradient(transparent, var(--border-subtle), transparent);
-  content: "";
+  display: none;
 }
 .hero-copy {
   z-index: 2;
   align-self: center;
+  max-width: 780px;
 }
 .eyebrow {
   display: flex;
@@ -298,22 +293,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 h1, h2, h3 {
-  font-family: "Outfit", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   color: var(--text-pure);
   font-weight: 500;
-  letter-spacing: -0.04em;
-  line-height: 1.05;
+  letter-spacing: 0;
+  line-height: 1.15;
 }
 h1 {
-  font-size: clamp(52px, 6.5vw, 88px);
-  margin: 22px 0 24px;
+  font-size: 56px;
+  margin: 22px 0 18px;
 }
 h1 em, h2 em {
   color: var(--teal-glow);
   font-style: normal;
-  background: linear-gradient(135deg, var(--teal-glow), #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--teal-primary);
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 .hero-description {
   max-width: 520px;
@@ -359,12 +354,12 @@ h1 em, h2 em {
 }
 .button-ghost {
   color: var(--text-soft);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-surface);
   border: 1px solid var(--border-glass);
 }
 .button-ghost:hover {
   border-color: var(--teal-border);
-  color: #fff;
+  color: var(--text-pure);
   background: var(--teal-soft);
 }
 
@@ -385,7 +380,7 @@ h1 em, h2 em {
   box-shadow: var(--shadow-calm);
 }
 .stat-pill strong {
-  font-family: "Outfit", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   color: var(--text-pure);
   font-size: 22px;
   font-weight: 600;
@@ -559,7 +554,7 @@ h1 em, h2 em {
   gap: 40px;
 }
 .section-heading-row h2 {
-  font-size: clamp(38px, 4.5vw, 62px);
+  font-size: 40px;
   margin: 0;
 }
 .section-intro {
@@ -588,7 +583,7 @@ h1 em, h2 em {
 
 .detector-console {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.75fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(250px, 0.7fr);
   margin-top: 48px;
   border: 1px solid var(--border-glass);
   background: var(--bg-surface);
@@ -735,7 +730,7 @@ h1 em, h2 em {
   left: 20px;
   display: flex;
   justify-content: space-between;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.88);
   font-family: "JetBrains Mono", monospace;
   font-size: 9.5px;
   letter-spacing: 0.04em;
@@ -981,7 +976,7 @@ h1 em, h2 em {
   justify-content: space-between;
   gap: 20px;
   padding: 18px 22px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-card);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-md);
 }
@@ -992,6 +987,25 @@ h1 em, h2 em {
   line-height: 1.55;
   margin: 0;
   flex: 1;
+}
+textarea.sentence-text {
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  resize: vertical;
+  outline: 0;
+}
+textarea.sentence-text:focus-visible {
+  outline: 2px solid var(--teal-border);
+  outline-offset: 4px;
+}
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
 }
 .sentence-meta-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .btn-speak { padding: 9px 18px; font-size: 13.5px; }
@@ -1802,7 +1816,7 @@ h1 em, h2 em {
 .fact-item strong {
   font-size: 30px;
   color: var(--teal-glow);
-  font-family: "Outfit", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-weight: 600;
 }
 .fact-item span {
@@ -1833,7 +1847,7 @@ h1 em, h2 em {
   font-weight: 600;
   color: var(--text-pure);
   margin-bottom: 12px;
-  font-family: "Outfit", sans-serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
 }
 .footer-tagline {
   font-size: 13.5px;
@@ -1895,7 +1909,7 @@ h1 em, h2 em {
    Responsive Adaptations
    ========================================================================== */
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; padding-top: 100px; min-height: auto; }
+  .hero { grid-template-columns: 1fr; padding-top: 54px; min-height: auto; }
   .hero::before { display: none; }
   .detector-console { grid-template-columns: 1fr; }
   .studio-workbench { grid-template-columns: 1fr; }
@@ -1919,4 +1933,18 @@ h1 em, h2 em {
   }
   .site-nav.open { display: flex; }
   .menu-button { display: block; }
+}
+
+@media (max-width: 600px) {
+  .section-shell { width: calc(100% - 32px); }
+  .site-header { width: calc(100% - 32px); }
+  h1 { font-size: 40px; }
+  .section-heading-row h2 { font-size: 32px; }
+  .hero { padding-top: 40px; padding-bottom: 32px; }
+  .hero-actions { align-items: stretch; flex-direction: column; gap: 10px; }
+  .hero-actions .button { width: 100%; }
+  .camera-column { padding: 16px; }
+  .sentence-builder-card { padding: 16px; }
+  .sentence-display { padding: 14px; }
+  .detector-top-badges { align-items: flex-start; flex-direction: column; }
 }

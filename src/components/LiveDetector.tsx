@@ -1,23 +1,17 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   Camera,
   CameraOff,
   Copy,
   Check,
   FlipHorizontal,
-  Hand,
   Layers,
+  Hand,
   Play,
-  RotateCcw,
-  Sliders,
-  Sparkles,
+  MessageSquareText,
   Trash2,
   Volume2,
-  VolumeX,
   Globe,
-  Radio,
-  Clock,
-  ArrowRight,
 } from "lucide-react";
 import { LandmarkPoint, normalizeTwoHands, ISLTFClassifier, knnPredictISL } from "../utils/islGestureClassifier";
 import { classifyISLRules } from "../utils/islRules";
@@ -33,7 +27,7 @@ export type ISLLabel = {
   id: string;
   name: string;
   output: string;
-  emoji: string;
+  emoji?: string;
   category: string;
   handsRequired: number;
   hindi: string;
@@ -48,6 +42,8 @@ interface LiveDetectorProps {
   dataset: Record<string, number[][]>;
   activeLang: string;
   onLanguageChange: (lang: string) => void;
+  tokenQueue?: string[];
+  onTokenQueueChange?: Dispatch<SetStateAction<string[]>>;
 }
 
 const HAND_BONES = [
@@ -65,6 +61,8 @@ export function LiveDetector({
   dataset,
   activeLang,
   onLanguageChange,
+  tokenQueue: externalTokenQueue,
+  onTokenQueueChange,
 }: LiveDetectorProps) {
   // Video and canvas refs
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -77,36 +75,54 @@ export function LiveDetector({
   const [active, setActive] = useState(false);
   const [mirrorVideo, setMirrorVideo] = useState(true);
   const [showSkeleton, setShowSkeleton] = useState(true);
-  const [confidenceThreshold, setConfidenceThreshold] = useState(65);
-  const [holdTime, setHoldTime] = useState(320); // Faster, snappier continuous detection (320ms)
-  const [continuousMode, setContinuousMode] = useState(true);
-  const [autoSpeak, setAutoSpeak] = useState(true);
-  const [cameraMessage, setCameraMessage] = useState("Camera ready. Click 'Start Camera' to begin.");
+  const confidenceThreshold = 70;
+  const holdTime = 500;
+  const [cameraMessage, setCameraMessage] = useState("Camera is ready. Start when you are.");
 
-  // Telemetry & Continuous Recognition
+  // Sign recognition state
   const [handsDetectedCount, setHandsDetectedCount] = useState(0);
   const [currentGestureId, setCurrentGestureId] = useState<string>("waiting");
   const [currentConfidence, setCurrentConfidence] = useState<number>(0);
   const [candidateGesture, setCandidateGesture] = useState<string>("");
+  const candidateGestureRef = useRef<string>("");
   const candidateSinceRef = useRef<number>(0);
   const lastAddedTokenRef = useRef<string>("");
-  const holdProgressRef = useRef<number>(0);
   const [holdProgressPercent, setHoldProgressPercent] = useState<number>(0);
 
   // Sentence Builder State
-  const [tokenQueue, setTokenQueue] = useState<string[]>([]);
+  const [internalTokenQueue, setInternalTokenQueue] = useState<string[]>([]);
+  const tokenQueue = externalTokenQueue ?? internalTokenQueue;
+
+  const updateTokenQueue = useCallback(
+    (updater: string[] | ((previous: string[]) => string[])) => {
+      if (onTokenQueueChange) {
+        const nextValue =
+          typeof updater === "function"
+            ? (updater as (previous: string[]) => string[])(externalTokenQueue ?? internalTokenQueue)
+            : updater;
+
+        onTokenQueueChange(nextValue);
+        return;
+      }
+
+      setInternalTokenQueue((previous) =>
+        typeof updater === "function" ? updater(previous) : updater
+      );
+    },
+    [externalTokenQueue, internalTokenQueue, onTokenQueueChange]
+  );
+
   const [translatedData, setTranslatedData] = useState<TranslatedResult>(() =>
     synthesizeSentenceInAllLanguages([], activeLang)
   );
+  const [editedMessage, setEditedMessage] = useState("");
   const [copied, setCopied] = useState(false);
-  const [speechRate, setSpeechRate] = useState(1.0);
 
   // Active label definition
   const activeLabel = labels.find((l) => l.id === currentGestureId) || {
     id: "waiting",
     name: active ? "Detecting hands…" : "Detector Standby",
     output: "",
-    emoji: active ? "✨" : "💤",
     category: "Standby",
     handsRequired: 1,
     hindi: "प्रतीक्षा",
@@ -118,12 +134,8 @@ export function LiveDetector({
   useEffect(() => {
     const result = synthesizeSentenceInAllLanguages(tokenQueue, activeLang);
     setTranslatedData(result);
-
-    // Speak continuous translation if enabled
-    if (autoSpeak && tokenQueue.length > 0) {
-      speakText(result.activeText, activeLang, speechRate);
-    }
-  }, [tokenQueue, activeLang, autoSpeak, speechRate]);
+    setEditedMessage(result.activeText);
+  }, [tokenQueue, activeLang]);
 
   // Continuous frame evaluation
   const processFrame = useCallback(
@@ -134,6 +146,8 @@ export function LiveDetector({
 
       if (handsCount === 0) {
         candidateSinceRef.current = 0;
+        candidateGestureRef.current = "";
+        lastAddedTokenRef.current = "";
         setCandidateGesture("");
         setCurrentGestureId("waiting");
         setCurrentConfidence(0);
@@ -171,7 +185,7 @@ export function LiveDetector({
         setCurrentGestureId(finalId);
         setCurrentConfidence(finalConf);
 
-        if (candidateGesture === finalId) {
+        if (candidateGestureRef.current === finalId) {
           const elapsed = now - candidateSinceRef.current;
           const progress = Math.min(100, Math.round((elapsed / holdTime) * 100));
           setHoldProgressPercent(progress);
@@ -179,16 +193,18 @@ export function LiveDetector({
           // Once held for the required duration, add token in continuous stream
           if (elapsed >= holdTime && lastAddedTokenRef.current !== finalId) {
             lastAddedTokenRef.current = finalId;
-            setTokenQueue((prev) => [...prev, finalId]);
+            updateTokenQueue((prev) => [...prev, finalId]);
             setHoldProgressPercent(100);
           }
         } else {
           // Gesture transition detected
+          candidateGestureRef.current = finalId;
           setCandidateGesture(finalId);
           candidateSinceRef.current = now;
           setHoldProgressPercent(10);
         }
       } else {
+        candidateGestureRef.current = "";
         setCandidateGesture("");
         candidateSinceRef.current = 0;
         setCurrentGestureId("waiting");
@@ -197,7 +213,7 @@ export function LiveDetector({
         lastAddedTokenRef.current = "";
       }
     },
-    [candidateGesture, classifier, confidenceThreshold, dataset, holdTime, labels]
+    [classifier, confidenceThreshold, dataset, holdTime, labels, updateTokenQueue]
   );
 
   // MediaPipe Results
@@ -318,7 +334,7 @@ export function LiveDetector({
     setCurrentGestureId("waiting");
     setCurrentConfidence(0);
     setHoldProgressPercent(0);
-    setCameraMessage("Camera resting. Click 'Start Camera' to resume.");
+    setCameraMessage("Camera is off.");
 
     if (videoRef.current) {
       videoRef.current.pause();
@@ -346,9 +362,9 @@ export function LiveDetector({
       }
 
       setActive(true);
-      setCameraMessage("Activating Dual-Hand Neural Tracker…");
+      setCameraMessage("Loading hand tracking…");
       await loadMediaPipeHands();
-      setCameraMessage("Continuous translation active. Sign naturally with 1 or 2 hands.");
+      setCameraMessage("Pause briefly on each supported sign.");
 
       const detect = async () => {
         if (!videoRef.current || !handsRef.current) return;
@@ -369,13 +385,13 @@ export function LiveDetector({
   }, [stopCamera]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(translatedData.activeText);
+    navigator.clipboard.writeText(editedMessage);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSpeak = () => {
-    speakText(translatedData.activeText, activeLang, speechRate);
+    speakText(editedMessage, activeLang);
   };
 
   const currentLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === activeLang) || SUPPORTED_LANGUAGES[0];
@@ -384,10 +400,10 @@ export function LiveDetector({
     <section className="detector-section section-shell" id="detector">
       <div className="section-heading-row">
         <div>
-          <div className="section-index">01 / CONTINUOUS TRANSLATOR</div>
+            <div className="section-index">01 / LIVE ISL TRANSLATOR</div>
           <h2>
-            Continuous Gesture<br />
-            <em>to Spoken Sentences.</em>
+              Translate a sign.<br />
+              <em>Review the message.</em>
           </h2>
         </div>
         <div className="detector-top-badges">
@@ -395,7 +411,7 @@ export function LiveDetector({
             <span className={`status-dot ${active ? "status-dot-pulse" : ""}`} />
             {active ? `${handsDetectedCount} Hand(s) Active` : "Camera Standby"}
           </span>
-          <span className="badge-calm-teal">Continuous Real-Time Engine</span>
+          <span className="badge-calm-teal">Supported sign patterns</span>
         </div>
       </div>
 
@@ -405,7 +421,7 @@ export function LiveDetector({
           <div className="camera-toolbar">
             <div className="source-info">
               <span className="mono text-xs text-teal-400 font-medium">
-                {active ? "DUAL-HAND TRACKING · 42 LANDMARKS" : "FEED: READY"}
+                {active ? "CAMERA ON · HAND TRACKING" : "CAMERA READY"}
               </span>
             </div>
             <div className="camera-toggles">
@@ -441,18 +457,14 @@ export function LiveDetector({
                 <div className="idle-glow-icon">
                   <Camera size={38} className="text-teal-400" />
                 </div>
-                <strong>Dual-Hand ISL Camera Tracker</strong>
-                <p>Sign continuously with one or two hands for real-time sentence translation</p>
-                <button className="button button-primary" onClick={startCamera}>
-                  <Play size={15} /> Start Camera
-                </button>
+                <strong>Start with a supported sign</strong>
+                <p>Pause briefly on one supported sign at a time to build your message.</p>
               </div>
             )}
 
-            {/* Live Real-time Continuous Recognition Overlay Banner */}
+            {/* Current possible sign */}
             {active && currentGestureId !== "waiting" && (
               <div className="camera-live-ticker">
-                <span className="live-ticker-emoji">{activeLabel.emoji}</span>
                 <div className="live-ticker-info">
                   <strong>{activeLabel.name}</strong>
                   <span>{MULTILINGUAL_VOCAB[currentGestureId]?.[activeLang] || activeLabel.output}</span>
@@ -468,17 +480,17 @@ export function LiveDetector({
 
             <div className="camera-readout camera-readout-top">
               <span>SIGNSPEAK ISL</span>
-              <span>CONF: {currentConfidence}%</span>
+              <span>EST. MATCH: {currentConfidence}%</span>
             </div>
 
             <div className="camera-readout camera-readout-bottom">
               <span>{cameraMessage}</span>
               <span>
                 {handsDetectedCount === 2
-                  ? "2 HANDS [TEAL+ROSE]"
+                  ? "2 hands detected"
                   : handsDetectedCount === 1
-                  ? "1 HAND [TEAL]"
-                  : "WAITING FOR HANDS"}
+                  ? "1 hand detected"
+                  : "Waiting for hands"}
               </span>
             </div>
           </div>
@@ -504,30 +516,22 @@ export function LiveDetector({
               </div>
             )}
 
-            <button
-              className={`continuous-toggle-btn ${continuousMode ? "active" : ""}`}
-              onClick={() => setContinuousMode(!continuousMode)}
-              title="Continuous live translation"
-            >
-              <Radio size={13} className={continuousMode ? "text-teal-400 animate-pulse" : ""} />
-              <span>Continuous: {continuousMode ? "ON" : "OFF"}</span>
-            </button>
           </div>
 
-          {/* Interactive Sentence Builder Bar with Any Language Selection */}
+            {/* Editable draft message */}
           <div className="sentence-builder-card">
             <div className="builder-header">
               <div className="builder-title">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-teal-400" />
-                  <strong>Live Sentence Translation</strong>
+                  <MessageSquareText size={16} className="text-teal-400" />
+                  <strong>Your message</strong>
                 </div>
                 <span className="builder-subtitle">
-                  Continuously converts accumulated gestures into fluent conversational sentences
+                  Review the message before sharing it.
                 </span>
               </div>
 
-              {/* Any Language Selector Dropdown */}
+              {/* Output language */}
               <div className="lang-picker-wrap">
                 <Globe size={14} className="text-teal-400" />
                 <select
@@ -538,7 +542,7 @@ export function LiveDetector({
                 >
                   {SUPPORTED_LANGUAGES.map((lang) => (
                     <option key={lang.code} value={lang.code}>
-                      {lang.flag} {lang.name} ({lang.nativeName})
+                      {lang.nativeName} ({lang.name})
                     </option>
                   ))}
                 </select>
@@ -547,10 +551,10 @@ export function LiveDetector({
 
             {/* Gesture Stream Queue */}
             <div className="tokens-stream">
-              <span className="stream-label">GESTURE STREAM:</span>
+              <span className="stream-label">SIGNS SELECTED</span>
               {tokenQueue.length === 0 ? (
-                <span className="empty-tokens-hint">
-                  Continuous mode active — show gestures to form full sentences…
+                  <span className="empty-tokens-hint">
+                  Recognized signs will appear here.
                 </span>
               ) : (
                 tokenQueue.map((tok, idx) => {
@@ -558,11 +562,10 @@ export function LiveDetector({
                   const wordTranslation = MULTILINGUAL_VOCAB[tok]?.[activeLang] || labelItem?.name || tok;
                   return (
                     <span key={`${tok}-${idx}`} className="token-chip">
-                      <span className="token-emoji">{labelItem?.emoji || "✋"}</span>
                       <span className="token-name">{wordTranslation}</span>
                       <button
                         className="token-del"
-                        onClick={() => setTokenQueue((prev) => prev.filter((_, i) => i !== idx))}
+                        onClick={() => updateTokenQueue((prev) => prev.filter((_, i) => i !== idx))}
                         aria-label={`Remove ${tok}`}
                       >
                         ×
@@ -577,23 +580,14 @@ export function LiveDetector({
             <div className="translated-sentence-box">
               <div className="lang-selector-row">
                 <div className="active-lang-badge">
-                  <span>{currentLangObj.flag}</span>
                   <strong>{currentLangObj.name}</strong>
                   <span className="text-xs text-slate-400">({currentLangObj.nativeName})</span>
                 </div>
 
                 <div className="speech-controls-inline">
                   <button
-                    className={`auto-speak-pill ${autoSpeak ? "active" : ""}`}
-                    onClick={() => setAutoSpeak(!autoSpeak)}
-                    title="Auto-speak sentences"
-                  >
-                    {autoSpeak ? <Volume2 size={13} /> : <VolumeX size={13} />}
-                    <span>Auto-Voice: {autoSpeak ? "ON" : "OFF"}</span>
-                  </button>
-                  <button
                     className="icon-action-btn"
-                    onClick={() => setTokenQueue([])}
+                    onClick={() => updateTokenQueue([])}
                     title="Clear sentence"
                     disabled={tokenQueue.length === 0}
                   >
@@ -603,38 +597,28 @@ export function LiveDetector({
               </div>
 
               <div className="sentence-display">
-                <p className="sentence-text">{translatedData.activeText}</p>
+                <textarea
+                  className="sentence-text"
+                  value={editedMessage}
+                  onChange={(event) => setEditedMessage(event.target.value)}
+                  aria-label="Edit translated message"
+                  rows={2}
+                />
                 <div className="sentence-meta-actions">
                   <button
                     className="button button-primary btn-speak"
                     onClick={handleSpeak}
-                    disabled={tokenQueue.length === 0}
+                    disabled={!editedMessage.trim() || tokenQueue.length === 0}
                   >
                     <Volume2 size={14} /> Speak
                   </button>
-                  <button className="button button-ghost" onClick={handleCopy}>
+                  <button className="button button-ghost" onClick={handleCopy} disabled={!editedMessage.trim() || tokenQueue.length === 0}>
                     {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                     {copied ? "Copied" : "Copy"}
                   </button>
                 </div>
               </div>
 
-              {/* Multilingual Quick View Cards */}
-              {tokenQueue.length > 0 && (
-                <div className="multilingual-preview-grid">
-                  {SUPPORTED_LANGUAGES.slice(0, 4).map((lang) => (
-                    <div
-                      key={lang.code}
-                      className={`preview-item ${activeLang === lang.code ? "highlight" : ""}`}
-                      onClick={() => onLanguageChange(lang.code)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <small>{lang.flag} {lang.name}</small>
-                      <p>{translatedData.translations[lang.code] || ""}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -642,16 +626,16 @@ export function LiveDetector({
         {/* Right Column: Telemetry & Controls */}
         <div className="telemetry-column">
           <div className="telemetry-label">
-            <span>REAL-TIME RECOGNITION</span>
-            <span className="mono">{currentConfidence}% MATCH</span>
+            <span>Current sign</span>
+            <span className="mono">Estimated {currentConfidence}% match</span>
           </div>
 
           <div className="gesture-result">
-            <div className="gesture-emoji">{activeLabel.emoji}</div>
+            <div className="gesture-emoji"><Hand size={26} aria-hidden="true" /></div>
             <div className="gesture-copy">
               <h3>{activeLabel.name}</h3>
               <p>
-                {activeLabel.category} · {activeLabel.handsRequired === 2 ? "🤲 2 Hands" : "✋ 1 Hand"}
+                {activeLabel.category} · {activeLabel.handsRequired === 2 ? "Two hands" : "One hand"}
               </p>
               <div className="bilingual-badge">
                 <span>{MULTILINGUAL_VOCAB[currentGestureId]?.[activeLang] || activeLabel.output}</span>
@@ -662,85 +646,18 @@ export function LiveDetector({
           {/* Confidence Meter */}
           <div className="confidence-block">
             <div className="meter-heading">
-              <span>Confidence Threshold</span>
-              <strong>{confidenceThreshold}%</strong>
+              <span>Estimated pose match</span>
+              <strong>{currentConfidence}%</strong>
             </div>
             <div className="meter">
               <span style={{ width: `${currentConfidence}%` }} />
             </div>
             <div className="meter-note">
               <span>Score: {currentConfidence}%</span>
-              <span>{currentConfidence >= confidenceThreshold ? "RECOGNIZED" : "SCANNING"}</span>
+              <span>{currentConfidence >= confidenceThreshold ? "POSSIBLE MATCH" : "LOOKING"}</span>
             </div>
           </div>
 
-          {/* Calibration Sliders */}
-          <div className="control-block">
-            <div className="control-heading">
-              <Sliders size={14} />
-              <strong>Continuous Translation Settings</strong>
-            </div>
-
-            <label className="range-label">
-              <span>Hold Stability Time: {holdTime}ms</span>
-              <input
-                type="range"
-                min={200}
-                max={700}
-                step={25}
-                value={holdTime}
-                onChange={(e) => setHoldTime(Number(e.target.value))}
-              />
-            </label>
-
-            <label className="range-label">
-              <span>Sensitivity Threshold: {confidenceThreshold}%</span>
-              <input
-                type="range"
-                min={50}
-                max={90}
-                step={5}
-                value={confidenceThreshold}
-                onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
-              />
-            </label>
-
-            <label className="range-label">
-              <span>Voice Speech Rate: {speechRate}x</span>
-              <input
-                type="range"
-                min={0.8}
-                max={1.3}
-                step={0.1}
-                value={speechRate}
-                onChange={(e) => setSpeechRate(Number(e.target.value))}
-              />
-            </label>
-          </div>
-
-          {/* Quick Sign Pose Guide */}
-          <div className="pose-tip-card">
-            <strong>
-              <Hand size={14} className="text-teal-400" /> Pose Guide
-            </strong>
-            <p>{activeLabel.poseGuide || activeLabel.description}</p>
-          </div>
-
-          {/* Quick Token Test Palette */}
-          <div className="quick-token-adder">
-            <span className="mono text-xs text-slate-400">QUICK TEST TOKENS:</span>
-            <div className="quick-tokens-chips">
-              {["namaste", "help", "water", "food", "where", "hospital", "time", "thank_you"].map((id) => (
-                <button
-                  key={id}
-                  className="quick-chip"
-                  onClick={() => setTokenQueue((prev) => [...prev, id])}
-                >
-                  +{labels.find((l) => l.id === id)?.name.split(" ")[0] || id}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </section>

@@ -1,30 +1,24 @@
 import { useState } from "react";
-import { Camera, Hand, Sparkles, BookOpen, Brain, Info, Menu, X, ArrowUpRight, Globe } from "lucide-react";
-import { SUPPORTED_LANGUAGES } from "../utils/sentenceSynthesizer";
+import { Camera, Hand, BookOpen, Menu, X, ArrowUpRight } from "lucide-react";
 
-export type NavTab = "detector" | "dictionary" | "studio" | "trainer" | "about";
+export type NavTab = "detector" | "dictionary";
 
 interface HeaderProps {
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
   onLaunchCamera?: () => void;
-  activeLang: string;
-  onLanguageChange: (lang: string) => void;
 }
 
 export function Header({
   activeTab,
   setActiveTab,
   onLaunchCamera,
-  activeLang,
-  onLanguageChange,
 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleNav = (tab: NavTab) => {
     setActiveTab(tab);
     setMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -58,46 +52,6 @@ export function Header({
           <BookOpen size={14} />
           <span>ISL Dictionary</span>
         </button>
-
-        <button
-          className={`nav-tab ${activeTab === "studio" ? "active" : ""}`}
-          onClick={() => handleNav("studio")}
-        >
-          <Sparkles size={14} />
-          <span>AI Sentence Studio</span>
-        </button>
-
-        <button
-          className={`nav-tab ${activeTab === "trainer" ? "active" : ""}`}
-          onClick={() => handleNav("trainer")}
-        >
-          <Brain size={14} />
-          <span>Model Trainer</span>
-        </button>
-
-        <button
-          className={`nav-tab ${activeTab === "about" ? "active" : ""}`}
-          onClick={() => handleNav("about")}
-        >
-          <Info size={14} />
-          <span>About ISL</span>
-        </button>
-
-        {/* Global Language Selector Pill */}
-        <div className="header-lang-selector">
-          <Globe size={13} className="text-teal-400" />
-          <select
-            value={activeLang}
-            onChange={(e) => onLanguageChange(e.target.value)}
-            aria-label="Change translation language"
-          >
-            {SUPPORTED_LANGUAGES.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.flag} {l.nativeName} ({l.name})
-              </option>
-            ))}
-          </select>
-        </div>
 
         <button
           className="nav-cta"

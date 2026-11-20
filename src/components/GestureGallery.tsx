@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Hand, Search, Sparkles, Volume2, Plus, Check } from "lucide-react";
+import { Hand, Search, Volume2, ArrowUpRight } from "lucide-react";
 import { ISLLabel } from "./LiveDetector";
 import { speakText, SupportedLanguage } from "../utils/sentenceSynthesizer";
 
@@ -11,7 +11,6 @@ interface GestureGalleryProps {
 export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [addedId, setAddedId] = useState<string | null>(null);
 
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -40,8 +39,6 @@ export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
 
   const handleAdd = (id: string) => {
     onAddToken?.(id);
-    setAddedId(id);
-    setTimeout(() => setAddedId(null), 1200);
   };
 
   const handleSpeak = (text: string, lang: SupportedLanguage = "en") => {
@@ -54,12 +51,12 @@ export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
         <div>
           <div className="section-index">02 / ISL VOCABULARY & DICTIONARY</div>
           <h2>
-            {labels.length} Indian Signs.<br />
-            <em>Every gesture, defined.</em>
+            Common ISL<br />
+            <em>signs and phrases.</em>
           </h2>
         </div>
         <p className="section-intro">
-          Explore single-hand and dual-hand gestures in Indian Sign Language (ISL), complete with hand-pose guides, translations in Hindi & Tamil, and direct sentence synthesis.
+          Browse supported signs with Hindi and Tamil wording, plus a short description of each gesture.
         </p>
       </div>
 
@@ -82,7 +79,6 @@ export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
               className={`filter-chip ${selectedCategory === cat ? "active" : ""}`}
               onClick={() => setSelectedCategory(cat)}
             >
-              {cat === "Two-Hand Signs" && "🤲 "}
               {cat}
             </button>
           ))}
@@ -91,9 +87,9 @@ export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
 
       {/* Results Count Banner */}
       <div className="gallery-meta-bar">
-        <span>Showing {filteredLabels.length} of {labels.length} signs</span>
+        <span>Showing {filteredLabels.length} supported signs</span>
         <span className="mono text-xs text-amber-500">
-          {filteredLabels.filter((l) => l.handsRequired === 2).length} Two-Hand Signs
+          {filteredLabels.filter((l) => l.handsRequired === 2).length} two-hand signs
         </span>
       </div>
 
@@ -102,10 +98,10 @@ export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
         {filteredLabels.map((item) => (
           <article key={item.id} className="gesture-card">
             <div className="gesture-card-top">
-              <span className="card-emoji">{item.emoji}</span>
+              <span className="card-emoji"><Hand size={24} aria-hidden="true" /></span>
               <div className="card-badges">
                 <span className={`badge-hands ${item.handsRequired === 2 ? "two-hands" : "one-hand"}`}>
-                  {item.handsRequired === 2 ? "🤲 2 Hands" : "✋ 1 Hand"}
+                  {item.handsRequired === 2 ? "Two hands" : "One hand"}
                 </span>
                 <span className="card-category">{item.category}</span>
               </div>
@@ -156,18 +152,10 @@ export function GestureGallery({ labels, onAddToken }: GestureGalleryProps) {
                 <Volume2 size={14} /> Pronounce
               </button>
               <button
-                className={`button ${addedId === item.id ? "button-primary" : "button-ghost"} btn-sm`}
+                className="button button-ghost btn-sm"
                 onClick={() => handleAdd(item.id)}
               >
-                {addedId === item.id ? (
-                  <>
-                    <Check size={14} /> Added!
-                  </>
-                ) : (
-                  <>
-                    <Plus size={14} /> Add to Sentence
-                  </>
-                )}
+                <ArrowUpRight size={14} /> Try this sign
               </button>
             </div>
           </article>

@@ -1,25 +1,11 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import islLabelsData from "./data/islLabels.json";
-import { ISLTFClassifier, TrainingResult } from "./utils/islGestureClassifier";
-import { generatePrepopulatedISLDataset } from "./utils/islRules";
+import { ISLTFClassifier } from "./utils/islGestureClassifier";
 import { Header, NavTab } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { LiveDetector, ISLLabel } from "./components/LiveDetector";
 import { GestureGallery } from "./components/GestureGallery";
-import { SentenceStudio } from "./components/SentenceStudio";
-import { ModelTrainer } from "./components/ModelTrainer";
-import { AboutSection } from "./components/AboutSection";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  Hand,
-  Sparkles,
-  Camera,
-  BookOpen,
-  Brain,
-  ShieldCheck,
-  Languages,
-} from "lucide-react";
+import { ArrowUpRight, BookOpen } from "lucide-react";
 import "./index.css";
 
 const HAND_POINTS = [
@@ -98,21 +84,13 @@ function DualHandHeroSkeleton() {
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTab>("detector");
   const [activeLang, setActiveLang] = useState<string>("en");
+  const [tokenQueue, setTokenQueue] = useState<string[]>([]);
   const labels = useMemo(() => islLabelsData as ISLLabel[], []);
 
-  // Prepopulated baseline dataset for 42 ISL signs
-  const [dataset, setDataset] = useState<Record<string, number[][]>>(() =>
-    generatePrepopulatedISLDataset()
-  );
-
-  // TensorFlow.js classifier instance
   const classifierRef = useRef<ISLTFClassifier>(new ISLTFClassifier());
 
-  const handleModelTrained = (result: TrainingResult) => {
-    console.log("ISL Model Trained:", result);
-  };
-
   const handleAddTokenFromGallery = (tokenId: string) => {
+    setTokenQueue((prev) => [...prev, tokenId]);
     setActiveTab("detector");
     const detectorElement = document.getElementById("detector");
     detectorElement?.scrollIntoView({ behavior: "smooth" });
@@ -133,8 +111,6 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={(tab) => scrollToTab(tab)}
         onLaunchCamera={() => scrollToTab("detector")}
-        activeLang={activeLang}
-        onLanguageChange={setActiveLang}
       />
 
       <main>
@@ -143,17 +119,17 @@ export default function App() {
           <div className="hero-copy">
             <div className="eyebrow">
               <span className="status-dot status-dot-pulse" />
-              <span>INDIAN SIGN LANGUAGE (ISL) · DUAL-HAND INTERFACE</span>
+              <span>INDIAN SIGN LANGUAGE · LIVE CAMERA TRANSLATION</span>
               <span className="eyebrow-line" />
             </div>
 
             <h1 id="hero-title">
-              Two hands.<br />
-              <em>One spoken voice.</em>
+              Clear communication,<br />
+              <em>when it matters.</em>
             </h1>
 
             <p className="hero-description">
-              SignSpeak is built specifically for <strong>Indian Sign Language (ISL)</strong>. It tracks both hands simultaneously, translates two-handed and single-handed signs into words, and synthesizes complete, natural sentences in <strong>English</strong>, <strong>Hindi</strong>, and <strong>Tamil</strong> in real time.
+              A simple camera-based ISL communication aid. Recognized signs build an editable message that you can review and speak aloud. Recognition is experimental; confirm important or medical messages with a qualified interpreter.
             </p>
 
             <div className="hero-actions">
@@ -161,100 +137,30 @@ export default function App() {
                 className="button button-primary"
                 onClick={() => scrollToTab("detector")}
               >
-                <span>Launch Live Detector</span>
+                <span>Start translating</span>
                 <ArrowUpRight size={16} />
               </button>
               <button
                 className="button button-ghost"
-                onClick={() => scrollToTab("studio")}
+                onClick={() => scrollToTab("dictionary")}
               >
-                <Sparkles size={16} className="text-amber-400" />
-                <span>AI Sentence Studio</span>
+                <BookOpen size={16} />
+                <span>Common signs</span>
               </button>
             </div>
 
-            <div className="hero-proof">
-              <div className="stat-pill">
-                <strong>42</strong>
-                <span>ISL Signs Supported</span>
-              </div>
-              <div className="stat-pill">
-                <strong>2 Hands</strong>
-                <span>Simultaneous 42-pt Tracking</span>
-              </div>
-              <div className="stat-pill">
-                <strong>EN / HI / TA</strong>
-                <span>Multilingual Speech Output</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="hero-visual">
-            <div className="hero-visual-label label-left">
-              <span>CYAN</span> LEFT HAND
-            </div>
-            <div className="hero-visual-label label-right">
-              RIGHT HAND <span>AMBER</span>
-            </div>
-
-            <div className="hero-ring ring-a" />
-            <div className="hero-ring ring-b" />
-
-            <DualHandHeroSkeleton />
-
-            <div className="hero-visual-bottom">
-              <span>ISL NAMASTE & TWO-HANDED SYNTHESIS</span>
-              <span className="mono">0.0 ms SERVER DELAY</span>
-            </div>
           </div>
         </section>
-
-        {/* Feature Navigation Bar (Pills to jump to sections cleanly) */}
-        <div className="feature-nav-bar section-shell">
-          <button
-            className={`feature-nav-pill ${activeTab === "detector" ? "active" : ""}`}
-            onClick={() => scrollToTab("detector")}
-          >
-            <Camera size={15} />
-            <span>01. Live Detector</span>
-          </button>
-          <button
-            className={`feature-nav-pill ${activeTab === "dictionary" ? "active" : ""}`}
-            onClick={() => scrollToTab("dictionary")}
-          >
-            <BookOpen size={15} />
-            <span>02. ISL Dictionary</span>
-          </button>
-          <button
-            className={`feature-nav-pill ${activeTab === "studio" ? "active" : ""}`}
-            onClick={() => scrollToTab("studio")}
-          >
-            <Sparkles size={15} />
-            <span>03. AI Sentence Studio</span>
-          </button>
-          <button
-            className={`feature-nav-pill ${activeTab === "trainer" ? "active" : ""}`}
-            onClick={() => scrollToTab("trainer")}
-          >
-            <Brain size={15} />
-            <span>04. Model Trainer</span>
-          </button>
-          <button
-            className={`feature-nav-pill ${activeTab === "about" ? "active" : ""}`}
-            onClick={() => scrollToTab("about")}
-          >
-            <ShieldCheck size={15} />
-            <span>05. About ISL</span>
-          </button>
-        </div>
 
         {/* Section 01: Live Camera Detector & Dual-Hand Recognition */}
         <LiveDetector
           labels={labels}
           classifier={classifierRef.current}
-          dataset={dataset}
+          dataset={{}}
           activeLang={activeLang}
           onLanguageChange={setActiveLang}
+          tokenQueue={tokenQueue}
+          onTokenQueueChange={setTokenQueue}
         />
 
         {/* Section 02: ISL Vocabulary Explorer & Dictionary */}
@@ -263,23 +169,6 @@ export default function App() {
           onAddToken={handleAddTokenFromGallery}
         />
 
-        {/* Section 03: AI Sentence Synthesizer Studio */}
-        <SentenceStudio
-          labels={labels}
-          activeLang={activeLang}
-          onLanguageChange={setActiveLang}
-        />
-
-        {/* Section 04: In-Browser ISL Neural Network Trainer */}
-        <ModelTrainer
-          classifier={classifierRef.current}
-          dataset={dataset}
-          labels={labels}
-          onModelTrained={handleModelTrained}
-        />
-
-        {/* Section 05: About ISL and Guide */}
-        <AboutSection />
       </main>
 
       {/* Footer without blog or contact */}

@@ -1,30 +1,19 @@
-// Comprehensive Multilingual Sentence Synthesizer for Indian Sign Language (ISL)
-// Supports continuous translation into ANY language (English, Hindi, Tamil, Telugu, Malayalam, Kannada, Marathi, Bengali, Gujarati, Spanish, French, German, Japanese, Arabic, etc.)
-// with Web Speech API audio output and optional AI (Gemini) enhancement.
+// Rule-based phrase builder for supported ISL vocabulary, with Web Speech output.
 
 export type LanguageOption = {
   code: string;
   name: string;
   nativeName: string;
-  flag: string;
+  flag?: string;
   voiceLocales: string[];
 };
 
+export type SupportedLanguage = LanguageOption["code"];
+
 export const SUPPORTED_LANGUAGES: LanguageOption[] = [
-  { code: "en", name: "English", nativeName: "English", flag: "🇬🇧", voiceLocales: ["en-IN", "en-US", "en-GB"] },
-  { code: "hi", name: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", voiceLocales: ["hi-IN", "hi"] },
-  { code: "ta", name: "Tamil", nativeName: "தமிழ்", flag: "🇮🇳", voiceLocales: ["ta-IN", "ta"] },
-  { code: "te", name: "Telugu", nativeName: "తెలుగు", flag: "🇮🇳", voiceLocales: ["te-IN", "te"] },
-  { code: "ml", name: "Malayalam", nativeName: "മലയാളം", flag: "🇮🇳", voiceLocales: ["ml-IN", "ml"] },
-  { code: "kn", name: "Kannada", nativeName: "ಕನ್ನಡ", flag: "🇮🇳", voiceLocales: ["kn-IN", "kn"] },
-  { code: "mr", name: "Marathi", nativeName: "मराठी", flag: "🇮🇳", voiceLocales: ["mr-IN", "mr"] },
-  { code: "bn", name: "Bengali", nativeName: "বাংলা", flag: "🇮🇳", voiceLocales: ["bn-IN", "bn-BD", "bn"] },
-  { code: "gu", name: "Gujarati", nativeName: "ગુજરાતી", flag: "🇮🇳", voiceLocales: ["gu-IN", "gu"] },
-  { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸", voiceLocales: ["es-ES", "es-MX", "es"] },
-  { code: "fr", name: "French", nativeName: "Français", flag: "🇫🇷", voiceLocales: ["fr-FR", "fr-CA", "fr"] },
-  { code: "de", name: "German", nativeName: "Deutsch", flag: "🇩🇪", voiceLocales: ["de-DE", "de"] },
-  { code: "ja", name: "Japanese", nativeName: "日本語", flag: "🇯🇵", voiceLocales: ["ja-JP", "ja"] },
-  { code: "ar", name: "Arabic", nativeName: "العربية", flag: "🇸🇦", voiceLocales: ["ar-SA", "ar"] },
+  { code: "en", name: "English", nativeName: "English", voiceLocales: ["en-IN", "en-US", "en-GB"] },
+  { code: "hi", name: "Hindi", nativeName: "हिन्दी", voiceLocales: ["hi-IN", "hi"] },
+  { code: "ta", name: "Tamil", nativeName: "தமிழ்", voiceLocales: ["ta-IN", "ta"] },
 ];
 
 export type TranslatedResult = {
@@ -639,6 +628,38 @@ type PatternDef = {
 };
 
 const IDIOMATIC_PATTERNS: PatternDef[] = [
+  {
+    matches: (t) => t.includes("i_me") && t.includes("pain"),
+    synthesizeAll: () => ({
+      en: "I am in pain. Please help me.",
+      hi: "मुझे दर्द हो रहा है। कृपया मेरी मदद करें।",
+      ta: "எனக்கு வலிக்கிறது. தயவுசெய்து எனக்கு உதவுங்கள்.",
+    }),
+  },
+  {
+    matches: (t) => t.includes("need") && t.includes("doctor"),
+    synthesizeAll: () => ({
+      en: "I need a doctor, please.",
+      hi: "मुझे डॉक्टर चाहिए। कृपया मदद करें।",
+      ta: "எனக்கு ஒரு மருத்துவர் வேண்டும். தயவுசெய்து உதவுங்கள்.",
+    }),
+  },
+  {
+    matches: (t) => t.includes("need") && t.includes("help"),
+    synthesizeAll: () => ({
+      en: "I need help, please.",
+      hi: "मुझे मदद चाहिए। कृपया सहायता करें।",
+      ta: "எனக்கு உதவி வேண்டும். தயவுசெய்து உதவுங்கள்.",
+    }),
+  },
+  {
+    matches: (t) => t.includes("emergency"),
+    synthesizeAll: () => ({
+      en: "This is an emergency. Please get medical help now.",
+      hi: "यह आपातकाल है। कृपया अभी चिकित्सा सहायता बुलाएँ।",
+      ta: "இது அவசரநிலை. தயவுசெய்து உடனே மருத்துவ உதவியை அழைக்கவும்.",
+    }),
+  },
   // Namaste greetings
   {
     matches: (t) => t.length === 1 && t[0] === "namaste",
